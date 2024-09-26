@@ -57,6 +57,8 @@ implementing various plugin extension interfaces:
 
 ## SDK components
 
+The `io.opentelemetry:opentelemetry-sdk:{{% param vers.otel %}}` artifact contains the OpenTelemetry SDK.
+
 The following sections describe the core user-facing components of the SDK. Each
 component section includes:
 
@@ -1199,6 +1201,8 @@ public class LogLimitsConfig {
 [TextMapPropagator](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/propagation/TextMapPropagator.html)
 is a [plugin extension interface](#sdk-plugin-extension-interfaces) responsible
 for propagating context across process boundaries in a text format.
+
+TextMapPropagators built-in to the SDK and maintained by the community in `opentelemetry-java-contrib`:
 
 | Class                       | Artifact                                                                                      | Description                                                                             |
 | --------------------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
