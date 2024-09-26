@@ -1,14 +1,14 @@
 ---
 title: Record Telemetry with API
 linkTitle: Record Telemetry with API
-weight: 210
+weight: 11
 logBridgeWarning: >
   While the `LoggerProvider` / `Logger` APIs are structurally similar to the equivalent trace and metric APIs, they serve a different use case. As of now, `LoggerProvider` / `Logger` and associated classes represent the [Log Bridge API](/docs/specs/otel/logs/bridge-api/), which exists to write log appenders to bridge logs recorded through other log APIs / frameworks into OpenTelemetry. They are not intended for end user use as a replacement for Log4j / SLF4J / Logback / etc.
 ---
 
 <?code-excerpt path-base="examples/java/api"?>
 
-The API is a set of classes and interfaces for recording telemetry across key observability signals. The [SDK](../sdk/) is the built-in reference implementation of the API. This page is a conceptual overview of the API, including descriptions, links to relevant Javadocs, artifact coordinates, sample API usage.
+The API is a set of classes and interfaces for recording telemetry across key observability signals. The [SDK](../sdk/) is the built-in reference implementation of the API, [configured](../configuration/) to process and export telemetry . This page is a conceptual overview of the API, including descriptions, links to relevant Javadocs, artifact coordinates, sample API usage.
 
 The API consists of the following top level components:
 
