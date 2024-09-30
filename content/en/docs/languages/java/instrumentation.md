@@ -188,9 +188,9 @@ In the direct to collector workflow, logs are emitted directly from an
 application to a collector using a network protocol (e.g. OTLP). This workflow
 is simple to set up as it doesn't require any additional log forwarding
 components, and allows an application to easily emit structured logs that
-conform to the [log data model](/docs/specs/otel/logs/data-model/). However, the overhead required
-for applications to queue and export logs to a network location may not be
-suitable for all applications.
+conform to the [log data model](/docs/specs/otel/logs/data-model/). However, the
+overhead required for applications to queue and export logs to a network
+location may not be suitable for all applications.
 
 To use this workflow:
 
