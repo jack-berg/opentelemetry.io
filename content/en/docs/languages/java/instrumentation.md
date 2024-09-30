@@ -94,8 +94,7 @@ norm, and view the instrumentation maintained by OpenTelemetry in
 as a temporary means of filling the gap.
 
 For a list of libraries with native instrumentation, look for entries with the
-"native" badge in the
-[registry](/ecosystem/registry/?language=java).
+"native" badge in the [registry](/ecosystem/registry/?language=java).
 
 ### Manual instrumentation
 
