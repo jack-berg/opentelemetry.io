@@ -3,31 +3,58 @@ title: Record Telemetry with API
 linkTitle: Record Telemetry with API
 weight: 11
 logBridgeWarning: >
-  While the `LoggerProvider` / `Logger` APIs are structurally similar to the equivalent trace and metric APIs, they serve a different use case. As of now, `LoggerProvider` / `Logger` and associated classes represent the [Log Bridge API](/docs/specs/otel/logs/bridge-api/), which exists to write log appenders to bridge logs recorded through other log APIs / frameworks into OpenTelemetry. They are not intended for end user use as a replacement for Log4j / SLF4J / Logback / etc.
+  While the `LoggerProvider` / `Logger` APIs are structurally similar to the
+  equivalent trace and metric APIs, they serve a different use case. As of now,
+  `LoggerProvider` / `Logger` and associated classes represent the [Log Bridge
+  API](/docs/specs/otel/logs/bridge-api/), which exists to write log appenders
+  to bridge logs recorded through other log APIs / frameworks into
+  OpenTelemetry. They are not intended for end user use as a replacement for
+  Log4j / SLF4J / Logback / etc.
 ---
 
 <?code-excerpt path-base="examples/java/api"?>
 
-The API is a set of classes and interfaces for recording telemetry across key observability signals. The [SDK](../sdk/) is the built-in reference implementation of the API, [configured](../configuration/) to process and export telemetry . This page is a conceptual overview of the API, including descriptions, links to relevant Javadocs, artifact coordinates, sample API usage.
+The API is a set of classes and interfaces for recording telemetry across key
+observability signals. The [SDK](../sdk/) is the built-in reference
+implementation of the API, [configured](../configuration/) to process and export
+telemetry . This page is a conceptual overview of the API, including
+descriptions, links to relevant Javadocs, artifact coordinates, sample API
+usage.
 
 The API consists of the following top level components:
 
-* [Context](#context-api-components): A standalone API for propagating context throughout an application and across application boundaries, including trace context and baggage.
-* [TracerProvider](#tracerprovider): The API entry point for traces.
-* [MeterProvider](#meterprovider): The API entry point for metrics.
-* [LoggerProvider](#loggerprovider): The API entry point for logs.
-* [OpenTelemetry](#opentelemetry): A holder for top level API components (i.e. `TracerProvider`, `MeterProvider`, `LoggerProvider`, `ContextPropagators`) which is convenient to pass to instrumentation.
+- [Context](#context-api-components): A standalone API for propagating context
+  throughout an application and across application boundaries, including trace
+  context and baggage.
+- [TracerProvider](#tracerprovider): The API entry point for traces.
+- [MeterProvider](#meterprovider): The API entry point for metrics.
+- [LoggerProvider](#loggerprovider): The API entry point for logs.
+- [OpenTelemetry](#opentelemetry): A holder for top level API components (i.e.
+  `TracerProvider`, `MeterProvider`, `LoggerProvider`, `ContextPropagators`)
+  which is convenient to pass to instrumentation.
 
-The API is designed to support multiple implementations. Two implementations are provided by OpenTelemetry:
+The API is designed to support multiple implementations. Two implementations are
+provided by OpenTelemetry:
 
-* [SDK](../sdk/) reference implementation. This is the right choice for most users.
-* [Noop](#noop-implementation) implementation. A minimalist, zero dependency implementation for instrumentations to use by default when the user doesn't install an instance.
+- [SDK](../sdk/) reference implementation. This is the right choice for most
+  users.
+- [Noop](#noop-implementation) implementation. A minimalist, zero dependency
+  implementation for instrumentations to use by default when the user doesn't
+  install an instance.
 
-The API is designed to be taken as a direct dependency by libraries, frameworks, and application owners. It comes with [strong backwards compatibility guarantees](https://github.com/open-telemetry/opentelemetry-java/blob/main/VERSIONING.md#compatibility-requirements), zero transitive dependencies, and [supports Java 8+](https://github.com/open-telemetry/opentelemetry-java/blob/main/VERSIONING.md#language-version-compatibility). Libraries and frameworks should depend only on the API and only call methods from the API, and instruct applications / end users to add a dependency on the SDK and install a configured instance.
+The API is designed to be taken as a direct dependency by libraries, frameworks,
+and application owners. It comes with
+[strong backwards compatibility guarantees](https://github.com/open-telemetry/opentelemetry-java/blob/main/VERSIONING.md#compatibility-requirements),
+zero transitive dependencies, and
+[supports Java 8+](https://github.com/open-telemetry/opentelemetry-java/blob/main/VERSIONING.md#language-version-compatibility).
+Libraries and frameworks should depend only on the API and only call methods
+from the API, and instruct applications / end users to add a dependency on the
+SDK and install a configured instance.
 
 ## API Components
 
-The following sections describe the OpenTelemetry API. Each component section includes:
+The following sections describe the OpenTelemetry API. Each component section
+includes:
 
 - A brief description, including a link to the Javadoc type reference.
 - Links to relevant resources to understand the API methods and arguments.
@@ -35,23 +62,39 @@ The following sections describe the OpenTelemetry API. Each component section in
 
 ## Context API
 
-The `io.opentelemetry:opentelemetry-api-context:{{% param vers.otel %}}` artifact contains standalone APIs (i.e. packaged separately from [OpenTelemetry API](#opentelemetry-api-components)) for propagating context throughout an application and across application boundaries.
+The `io.opentelemetry:opentelemetry-api-context:{{% param vers.otel %}}`
+artifact contains standalone APIs (i.e. packaged separately from
+[OpenTelemetry API](#opentelemetry-api-components)) for propagating context
+throughout an application and across application boundaries.
 
 It consists of:
 
-* [Context](#context): An immutable bundle of key value pairs which is implicitly or explicitly propagated through an application.
-* [ContextStorage](#contextstorage): A mechanism for storing and retrieving the current context, defaulting to thread local.
-* [ContextPropagators](#context): A container of registered propagators for propagating `Context` across application boundaries.
+- [Context](#context): An immutable bundle of key value pairs which is
+  implicitly or explicitly propagated through an application.
+- [ContextStorage](#contextstorage): A mechanism for storing and retrieving the
+  current context, defaulting to thread local.
+- [ContextPropagators](#context): A container of registered propagators for
+  propagating `Context` across application boundaries.
 
-The `io.opentelemetry:opentelemetry-extension-kotlint:{{% param vers.otel %}}` is an extension with tool for propagating context into coroutines.
+The `io.opentelemetry:opentelemetry-extension-kotlint:{{% param vers.otel %}}`
+is an extension with tool for propagating context into coroutines.
 
 ### Context
 
-[Context](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/Context.html) is an immutable bundle of key value pairs, with utilities for implicitly propagating through an application and across threads. Implicit propagation means that the context can be accessed without explicitly passing it as an argument. Context is a recurring concept in the OpenTelemetry API:
+[Context](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/Context.html)
+is an immutable bundle of key value pairs, with utilities for implicitly
+propagating through an application and across threads. Implicit propagation
+means that the context can be accessed without explicitly passing it as an
+argument. Context is a recurring concept in the OpenTelemetry API:
 
-* The current active [Span](#span) is stored in context, and by default a span's parent is assigned to whatever span is currently in context.
-* The measurements recorded to [metric instruments](#meter) accept a context argument, used to link measurements to spans via [exemplars](/docs/specs/otel/metrics/data-model/#exemplars) and defaulting to whatever span is currently in context.
-* [LogRecords](#logrecordbuilder) accept a context argument, used to link log records spans and defaulting to whatever span is currently in context.
+- The current active [Span](#span) is stored in context, and by default a span's
+  parent is assigned to whatever span is currently in context.
+- The measurements recorded to [metric instruments](#meter) accept a context
+  argument, used to link measurements to spans via
+  [exemplars](/docs/specs/otel/metrics/data-model/#exemplars) and defaulting to
+  whatever span is currently in context.
+- [LogRecords](#logrecordbuilder) accept a context argument, used to link log
+  records spans and defaulting to whatever span is currently in context.
 
 The following code snippet explores `Context` API usage:
 
@@ -154,15 +197,21 @@ public class ContextUsage {
 
 ### ContextStorage
 
-[ContextStorage](https://www.javadoc.io/static/io.opentelemetry/opentelemetry-context/1.41.0/io/opentelemetry/context/ContextStorage.html) is a mechanism for storing and retrieving the current `Context`.
+[ContextStorage](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/ContextStorage.html)
+is a mechanism for storing and retrieving the current `Context`.
 
 The default `ContextStorage` implementation stores `Context` in thread local.
 
 ### ContextPropagators
 
-[ContextPropagators](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/propagation/ContextPropagators.html) is a container of registered propagators for propagating `Context` across application boundaries. Context is injected into a carrier when leaving an application (i.e. an outbound HTTP request), and extracted from a carrier when entering an application (i.e. serving an HTTP request).
+[ContextPropagators](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/propagation/ContextPropagators.html)
+is a container of registered propagators for propagating `Context` across
+application boundaries. Context is injected into a carrier when leaving an
+application (i.e. an outbound HTTP request), and extracted from a carrier when
+entering an application (i.e. serving an HTTP request).
 
-See [SDK TextMapPropagators](../sdk/#textmappropagator) for propgator implementations.
+See [SDK TextMapPropagators](../sdk/#textmappropagator) for propgator
+implementations.
 
 The following code snippet explores `ContextPropagators` API for injection:
 
@@ -310,19 +359,33 @@ public class ExtractContextUsage {
 
 ## OpenTelemetry API
 
-The `io.opentelemetry:opentelemetry-api:{{% param vers.otel %}}` artifact contains the OpenTelemetry API, including traces, metrics, logs, noop implementation, baggage, key `TextMapPropagator` implementations, and a dependency on the [context API](#context-api-components).
+The `io.opentelemetry:opentelemetry-api:{{% param vers.otel %}}` artifact
+contains the OpenTelemetry API, including traces, metrics, logs, noop
+implementation, baggage, key `TextMapPropagator` implementations, and a
+dependency on the [context API](#context-api-components).
 
 ### Providers and Scopes
 
-Providers and scopes are recurring concepts in the OpenTelemetry API. A scope is a logical unit within the application which telemetry is associated with. A provider provides components for recording telemetry relative to a particular scope:
+Providers and scopes are recurring concepts in the OpenTelemetry API. A scope is
+a logical unit within the application which telemetry is associated with. A
+provider provides components for recording telemetry relative to a particular
+scope:
 
-* [TracerProvider](#tracerprovider) provides scoped [Tracers](#tracer) for recording spans.
-* [MeterProvider](#meterprovider) provides scoped [Meters](#meter) for recording metrics.
-* [LoggerProvider](#loggerprovider) provides scoped [Loggers](#logger) for recording logs.
+- [TracerProvider](#tracerprovider) provides scoped [Tracers](#tracer) for
+  recording spans.
+- [MeterProvider](#meterprovider) provides scoped [Meters](#meter) for recording
+  metrics.
+- [LoggerProvider](#loggerprovider) provides scoped [Loggers](#logger) for
+  recording logs.
 
 {{% alert %}} {{% param logBridgeWarning %}} {{% /alert %}}
 
-A scope is identified by the triplet (name, version, schemaUrl). Care must be taken to ensure to the scope identity is unique. A typical approach is to set the scope name to the package name or fully qualified class name, and to set the scope version to the library version. If emitting telemetry for multiple signals (i.e. metrics and traces), the same scope should be used. See [instrumentation scope](/docs/concepts/instrumentation-scope/) for details.
+A scope is identified by the triplet (name, version, schemaUrl). Care must be
+taken to ensure to the scope identity is unique. A typical approach is to set
+the scope name to the package name or fully qualified class name, and to set the
+scope version to the library version. If emitting telemetry for multiple signals
+(i.e. metrics and traces), the same scope should be used. See
+[instrumentation scope](/docs/concepts/instrumentation-scope/) for details.
 
 The following code snippet explores provider and scope API usage:
 
@@ -387,16 +450,21 @@ public class ProvidersAndScopes {
 
 ### Attributes
 
-[Attributes](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/common/Attributes.html) is a bundle of key value pairs representing the [standard attribute definition](/docs/specs/otel/common/#standard-attribute). `Attributes` are a recurring concept in the OpenTelemetry API:
+[Attributes](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/common/Attributes.html)
+is a bundle of key value pairs representing the
+[standard attribute definition](/docs/specs/otel/common/#standard-attribute).
+`Attributes` are a recurring concept in the OpenTelemetry API:
 
-* [Spans](#span), span events, and span links have attributes
-* The measurements recorded to [metric instruments](#meter) have attributes
-* [LogRecords](#logrecordbuilder) have attributes
-* and more
+- [Spans](#span), span events, and span links have attributes
+- The measurements recorded to [metric instruments](#meter) have attributes
+- [LogRecords](#logrecordbuilder) have attributes
+- and more
 
-See [semantic attributes](#semantic-attributes) for attribute constants generated from the semantic conventions.
+See [semantic attributes](#semantic-attributes) for attribute constants
+generated from the semantic conventions.
 
-See [attribute naming](/docs/specs/semconv/general/attribute-naming/) for guidance on attribute naming.
+See [attribute naming](/docs/specs/semconv/general/attribute-naming/) for
+guidance on attribute naming.
 
 The following code snippet explores `Attributes` API usage:
 
@@ -487,14 +555,17 @@ public class AttributesUsage {
 
 ### OpenTelemetry
 
-[OpenTelemetry](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/OpenTelemetry.html) is a holder for top-level API components which is convenient to pass to instrumentation.
+[OpenTelemetry](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/OpenTelemetry.html)
+is a holder for top-level API components which is convenient to pass to
+instrumentation.
 
 `OpenTelemetry` consists of:
 
-- [TracerProvider](#tracerprovider): The API entry point for traces. 
-- [MeterProvider](#meterprovider): The API entry point for metrics. 
+- [TracerProvider](#tracerprovider): The API entry point for traces.
+- [MeterProvider](#meterprovider): The API entry point for metrics.
 - [LoggerProvider](#loggerprovider): The API entry point for logs.
-- [ContextPropagators](#contextpropagators): The API entry point for context propagation.
+- [ContextPropagators](#contextpropagators): The API entry point for context
+  propagation.
 
 The following code snippet explores `OpenTelemetry` API usage:
 
@@ -526,15 +597,36 @@ public class OpenTelemetryUsage {
 
 ### GlobalOpenTelemetry
 
-[GlobalOpenTelemetry](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/GlobalOpenTelemetry.html) holds a global singleton [OpenTelemetry](#opentelemetry) instance. 
+[GlobalOpenTelemetry](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/GlobalOpenTelemetry.html)
+holds a global singleton [OpenTelemetry](#opentelemetry) instance.
 
-Instrumentation should avoid using `GlobalOpenTelemetry`. Instead, accept `OpenTelemetry` as an initialization argument and default to the [Noop implementation](#noop-implementation) if not set. There is an exception to this rule: the `OpenTelemetry` instance installed by the [Java agent](/docs/zero-code/java/agent/) is available via `GlobalOpenTelemetry`. Users with additional manual instrumentation are encouraged to access it via `GlobalOpenTelemetry.get()`.
+Instrumentation should avoid using `GlobalOpenTelemetry`. Instead, accept
+`OpenTelemetry` as an initialization argument and default to the
+[Noop implementation](#noop-implementation) if not set. There is an exception to
+this rule: the `OpenTelemetry` instance installed by the
+[Java agent](/docs/zero-code/java/agent/) is available via
+`GlobalOpenTelemetry`. Users with additional manual instrumentation are
+encouraged to access it via `GlobalOpenTelemetry.get()`.
 
-`GlobalOpenTelemetry.get()` is guaranteed to always return the same result. If `GlobalOpenTelemetry.get()` is called before `GlobalOpenTelemetry.set(..)`, `GlobalOpenTelemetry` is set to the noop implementation and future calls to `GlobalOpenTelemetry.set(..)` throw an exception. Therefore, it's critical to call `GlobalOpenTelemetry.set(..)` as early in the application lifecycle as possible, and before `GlobalOpenTelemetry.get()` is called by any instrumentation. This guarantee surfaces initialization ordering issues: calling `GlobalOpenTelemetry.set()` too late (i.e. after instrumentation has called `GlobalOpenTelemetry.get()`) triggers an exception rather than silently failing.
+`GlobalOpenTelemetry.get()` is guaranteed to always return the same result. If
+`GlobalOpenTelemetry.get()` is called before `GlobalOpenTelemetry.set(..)`,
+`GlobalOpenTelemetry` is set to the noop implementation and future calls to
+`GlobalOpenTelemetry.set(..)` throw an exception. Therefore, it's critical to
+call `GlobalOpenTelemetry.set(..)` as early in the application lifecycle as
+possible, and before `GlobalOpenTelemetry.get()` is called by any
+instrumentation. This guarantee surfaces initialization ordering issues: calling
+`GlobalOpenTelemetry.set()` too late (i.e. after instrumentation has called
+`GlobalOpenTelemetry.get()`) triggers an exception rather than silently failing.
 
-If [autoconfigure](/configuration/#zero-code-sdk-autoconfigure) is present, `GlobalOpenTelemetry` can be automatically initialized by setting `-Dotel.java.global-autoconfigure.enabled=true` (or via env var `export OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED=true`). When enabled, the first call to `GlobalOpenTelemetry.get()` triggers autoconfiguration and calls `GlobalOpenTelemetry.set(..)` with the resulting `OpenTelemetry` instance.
+If [autoconfigure](/configuration/#zero-code-sdk-autoconfigure) is present,
+`GlobalOpenTelemetry` can be automatically initialized by setting
+`-Dotel.java.global-autoconfigure.enabled=true` (or via env var
+`export OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED=true`). When enabled, the first
+call to `GlobalOpenTelemetry.get()` triggers autoconfiguration and calls
+`GlobalOpenTelemetry.set(..)` with the resulting `OpenTelemetry` instance.
 
-The following code snippet explores `GlobalOpenTelemetry` API context propagation:
+The following code snippet explores `GlobalOpenTelemetry` API context
+propagation:
 
 <!-- prettier-ignore-start -->
 <?code-excerpt "src/main/java/otel/GlobalOpenTelemetryUsage.java"?>
@@ -560,17 +652,29 @@ public class GlobalOpenTelemetryUsage {
 
 ### TracerProvider
 
-[TracerProvider](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/trace/TracerProvider.html) is the API entry point for traces, and provides [Tracers](#tracer). See [providers and scopes](#providers-and-scopes) for information on providers and scopes.
+[TracerProvider](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/trace/TracerProvider.html)
+is the API entry point for traces, and provides [Tracers](#tracer). See
+[providers and scopes](#providers-and-scopes) for information on providers and
+scopes.
 
 #### Tracer
 
-[Tracer](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/trace/Tracer.html) is used to [record spans](#span) for an instrumentation scope. See [providers and scopes](#providers-and-scopes) for information on providers and scopes.
+[Tracer](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/trace/Tracer.html)
+is used to [record spans](#span) for an instrumentation scope. See
+[providers and scopes](#providers-and-scopes) for information on providers and
+scopes.
 
 #### Span
 
-[SpanBuilder](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/trace/SpanBuilder.html) and [Span](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/trace/Span.html) are used to construct and record data to spans. 
+[SpanBuilder](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/trace/SpanBuilder.html)
+and
+[Span](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/trace/Span.html)
+are used to construct and record data to spans.
 
-`SpanBuilder` is used to add data to a span before starting it by calling `Span startSpan()`. Data can be added / updated after starting by calling various `Span` update methods. The data provided to `SpanBuilder` before starting is provided as an input to [Samplers](../sdk/#sampler).
+`SpanBuilder` is used to add data to a span before starting it by calling
+`Span startSpan()`. Data can be added / updated after starting by calling
+various `Span` update methods. The data provided to `SpanBuilder` before
+starting is provided as an input to [Samplers](../sdk/#sampler).
 
 The following code snippet explores `SpanBuilder` / `Span` API usage:
 
@@ -666,9 +770,18 @@ public class SpanUsage {
 ```
 <!-- prettier-ignore-end -->
 
-Span parenting is an important aspect of tracing. Each span has an optional parent. By collecting all the spans in a trace and following each span's parent, we can construct a hierarchy. The span APIs are build on top of [context](#context), which allows span context to be implicitly passed around an application and across threads. When a span is created, its parent is set to the whatever span is present in `Context.current()` unless there is no span or the context is explicitly overridden. 
+Span parenting is an important aspect of tracing. Each span has an optional
+parent. By collecting all the spans in a trace and following each span's parent,
+we can construct a hierarchy. The span APIs are build on top of
+[context](#context), which allows span context to be implicitly passed around an
+application and across threads. When a span is created, its parent is set to the
+whatever span is present in `Context.current()` unless there is no span or the
+context is explicitly overridden.
 
-Most of the context API usage guidance applies to span. Span context is propagated across application boundaries with the [W3CTraceContextPropagator](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/trace/propagation/W3CTraceContextPropagator.html) and other [TextMapPropagators](/docs/languages/java/sdk/#textmappropagator).
+Most of the context API usage guidance applies to span. Span context is
+propagated across application boundaries with the
+[W3CTraceContextPropagator](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/trace/propagation/W3CTraceContextPropagator.html)
+and other [TextMapPropagators](/docs/languages/java/sdk/#textmappropagator).
 
 The following code snippet explores `Span` API context propagation:
 
@@ -733,14 +846,23 @@ public class SpanAndContextUsage {
 
 ### MeterProvider
 
-[MeterProvider](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/MeterProvider.html) is the API entry point for metrics, and provides [Meters](#meter). See [providers and scopes](#providers-and-scopes) for information on providers and scopes.
+[MeterProvider](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/MeterProvider.html)
+is the API entry point for metrics, and provides [Meters](#meter). See
+[providers and scopes](#providers-and-scopes) for information on providers and
+scopes.
 
 #### Meter
 
-[Meter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/Meter.html) is used to obtain instruments for a particular [instrumentation scope](#providers-and-scopes). See [providers and scopes](#providers-and-scopes) for information on providers and scopes. There are a variety of instruments, each with different semantics and default behavior in the SDK. Its important to choose the right instrument for each particular use case:
+[Meter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/Meter.html)
+is used to obtain instruments for a particular
+[instrumentation scope](#providers-and-scopes). See
+[providers and scopes](#providers-and-scopes) for information on providers and
+scopes. There are a variety of instruments, each with different semantics and
+default behavior in the SDK. Its important to choose the right instrument for
+each particular use case:
 
 | Instrument                                  | Sync or Async | Description                                                                        | Example                                                 | Default SDK Aggregation                                                                       |
-|---------------------------------------------|---------------|------------------------------------------------------------------------------------|---------------------------------------------------------|-----------------------------------------------------------------------------------------------|
+| ------------------------------------------- | ------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | [Counter](#counter)                         | sync          | Record monotonic (positive) values.                                                | Record user logins                                      | [sum (monotonic=true)](/docs/specs/otel/metrics/sdk/#sum-aggregation)                         |
 | [Async Counter](#async-counter)             | async         | Observe monotonic sums.                                                            | Observe number of classes loaded in the JVM             | [sum (monotonic=true)](/docs/specs/otel/metrics/sdk/#sum-aggregation)                         |
 | [UpDownCounter](#updowncounter)             | sync          | Record non-monotonic (positive and negative) values.                               | Record when items are added to and removed from a queue | [sum (monotonic=false)](/docs/specs/otel/metrics/sdk/#sum-aggregation)                        |
@@ -749,22 +871,40 @@ public class SpanAndContextUsage {
 | [Gauge](#gauge)                             | sync          | Record the latest value where spatial re-aggregation does not make sense **[1]**.  | Record temperature                                      | [LastValue](/docs/specs/otel/metrics/sdk/#last-value-aggregation)                             |
 | [Async Gauge](#async-gauge)                 | async         | Observe the latest value where spatial re-aggregation does not make sense **[1]**. | Observe CPU utilization                                 | [LastValue](/docs/specs/otel/metrics/sdk/#last-value-aggregation)                             |
 
-**[1]**: Spatial re-aggregation is the process of merging attribute streams by dropping attributes which are not needed. For example, given series with attributes `{"color": "red", "shape": "square"}`, `{"color": "blue", "shape": "square"}`, you can perform spatial re-aggregation by dropping the `color` attribute, and merging the series where the attributes are equal after dropping `color`. Most aggregations have a useful spatial aggregation merge function (i.e. sums are summed together), but gauges aggregated by the `LastValue` aggregation are the exception. For example, suppose the series mentioned previously are tracking the temperature of widgets. How do you merge the series when you drop the `color` attribute? There is no good answer besides flipping a coin and selecting a random value.
+**[1]**: Spatial re-aggregation is the process of merging attribute streams by
+dropping attributes which are not needed. For example, given series with
+attributes `{"color": "red", "shape": "square"}`,
+`{"color": "blue", "shape": "square"}`, you can perform spatial re-aggregation
+by dropping the `color` attribute, and merging the series where the attributes
+are equal after dropping `color`. Most aggregations have a useful spatial
+aggregation merge function (i.e. sums are summed together), but gauges
+aggregated by the `LastValue` aggregation are the exception. For example,
+suppose the series mentioned previously are tracking the temperature of widgets.
+How do you merge the series when you drop the `color` attribute? There is no
+good answer besides flipping a coin and selecting a random value.
 
 The instrument APIs have share a variety of features:
 
-* Created using the builder pattern.
-* Required instrument name.
-* Optional unit and description.
-* Record values which are `long` or `double`, which is configured via the builder.
+- Created using the builder pattern.
+- Required instrument name.
+- Optional unit and description.
+- Record values which are `long` or `double`, which is configured via the
+  builder.
 
-See [metric guidelines](http://localhost:1313/docs/specs/semconv/general/metrics/#general-guidelines) for details on metric naming and units.
+See
+[metric guidelines](http://localhost:1313/docs/specs/semconv/general/metrics/#general-guidelines)
+for details on metric naming and units.
 
-See [guidelines for instrumentation library authors](/docs/specs/otel/metrics/supplementary-guidelines/#guidelines-for-instrumentation-library-authors) for additional guidance on instrument selection.
+See
+[guidelines for instrumentation library authors](/docs/specs/otel/metrics/supplementary-guidelines/#guidelines-for-instrumentation-library-authors)
+for additional guidance on instrument selection.
 
 #### Counter
 
-[LongCounter](https://www.javadoc.io/static/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/LongCounter.html) and [DoubleCounter](https://www.javadoc.io/static/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/DoubleCounter.html) are used to record monotonic (positive) values.
+[LongCounter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/LongCounter.html)
+and
+[DoubleCounter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/DoubleCounter.html)
+are used to record monotonic (positive) values.
 
 The following code snippet explores counter API usage:
 
@@ -818,7 +958,10 @@ public class CounterUsage {
 
 #### Async Counter
 
-[ObservableLongCounter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/ObservableLongCounter.htmll) and [ObservableDoubleCounter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/ObservableDoubleCounter.html) are used to observe monotonic (positive) sums.
+[ObservableLongCounter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/ObservableLongCounter.htmll)
+and
+[ObservableDoubleCounter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/ObservableDoubleCounter.html)
+are used to observe monotonic (positive) sums.
 
 The following code snippet explores async counter API usage:
 
@@ -880,7 +1023,10 @@ public class AsyncCounterUsage {
 
 #### UpDownCounter
 
-[LongUpDownCounter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/LongUpDownCounter.html) and [DoubleUpDownCounter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/DoubleUpDownCounter.html) are used to record non-monotonic (positive and negative) values.
+[LongUpDownCounter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/LongUpDownCounter.html)
+and
+[DoubleUpDownCounter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/DoubleUpDownCounter.html)
+are used to record non-monotonic (positive and negative) values.
 
 The following code snippet explores updowncounter API usage:
 
@@ -934,7 +1080,10 @@ public class UpDownCounterUsage {
 
 #### Async UpDownCounter
 
-[ObservableLongUpDownCounter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/ObservableLongUpDownCounter.html) and [ObservableDoubleUpDownCounter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/ObservableDoubleUpDownCounter.html) are used to observe non-monotonic (positive and negative) sums.
+[ObservableLongUpDownCounter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/ObservableLongUpDownCounter.html)
+and
+[ObservableDoubleUpDownCounter](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/ObservableDoubleUpDownCounter.html)
+are used to observe non-monotonic (positive and negative) sums.
 
 The following code snippet explores async updowncounter API usage:
 
@@ -995,7 +1144,11 @@ public class AsyncUpDownCounterUsage {
 
 #### Histogram
 
-[DoubleHistogram](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/DoubleHistogram.html) and [LongHistogram](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/LongHistogram.html) are used to record monotonic (positive) values where the distribution is important.
+[DoubleHistogram](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/DoubleHistogram.html)
+and
+[LongHistogram](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/LongHistogram.html)
+are used to record monotonic (positive) values where the distribution is
+important.
 
 The following code snippet explores histogram API usage:
 
@@ -1050,7 +1203,11 @@ public class HistogramUsage {
 
 #### Gauge
 
-[DoubleGauge](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/DoubleGauge.html) and [LongGauge](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/LongGauge.html) are used to record the latest value where spatial re-aggregation does not make sense.
+[DoubleGauge](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/DoubleGauge.html)
+and
+[LongGauge](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/LongGauge.html)
+are used to record the latest value where spatial re-aggregation does not make
+sense.
 
 The following code snippet explores gauge API usage:
 
@@ -1105,7 +1262,11 @@ public class GaugeUsage {
 
 #### Async Gauge
 
-[ObservableDoubleGauge](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/ObservableDoubleGauge.html) and [ObservableLongGauge](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/ObservableLongGauge.html) are used to observe the latest value where spatial re-aggregation does not make sense.
+[ObservableDoubleGauge](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/ObservableDoubleGauge.html)
+and
+[ObservableLongGauge](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/ObservableLongGauge.html)
+are used to observe the latest value where spatial re-aggregation does not make
+sense.
 
 The following code snippet explores async gauge API usage:
 
@@ -1166,17 +1327,25 @@ public class AsyncGaugeUsage {
 
 ### LoggerProvider
 
-[LoggerProvider](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/logs/LoggerProvider.html) is the API entry point for logs, and provides [Loggers](#logger). See [providers and scopes](#providers-and-scopes) for information on providers and scopes.
+[LoggerProvider](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/logs/LoggerProvider.html)
+is the API entry point for logs, and provides [Loggers](#logger). See
+[providers and scopes](#providers-and-scopes) for information on providers and
+scopes.
 
 {{% alert %}} {{% param logBridgeWarning %}} {{% /alert %}}
 
 #### Logger
 
-[Logger](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/logs/Logger.html) is used to [emit log records](#logrecordbuilder) for an [instrumentation scope](#providers-and-scopes). See [providers and scopes](#providers-and-scopes) for information on providers and scopes.
+[Logger](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/logs/Logger.html)
+is used to [emit log records](#logrecordbuilder) for an
+[instrumentation scope](#providers-and-scopes). See
+[providers and scopes](#providers-and-scopes) for information on providers and
+scopes.
 
 #### LogRecordBuilder
 
-[LogRecordBuilder](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/logs/LogRecordBuilder.html) is used to construct and emit log records.
+[LogRecordBuilder](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/logs/LogRecordBuilder.html)
+is used to construct and emit log records.
 
 The following code snippet explores `LogRecordBuilder` API usage:
 
@@ -1251,7 +1420,14 @@ public class LogRecordUsage {
 
 ### Noop implementation
 
-The `OpenTelemetry#noop()` method provides access to a noop implementation of [OpenTelemetry](#opentelemetry) and all API components it provides access to. As the name suggests, the noop implementation does nothing and is designed to have no impact on performance. Instrumentation may see impact on performance even when the noop is used if it is computing / allocating attribute values and other data requried to record the telemetry. The noop is a useful default instance of `OpenTelemetry` when a user has not configured and installed a concrete implementation such as the [SDK](/docs/languages/java/sdk/).
+The `OpenTelemetry#noop()` method provides access to a noop implementation of
+[OpenTelemetry](#opentelemetry) and all API components it provides access to. As
+the name suggests, the noop implementation does nothing and is designed to have
+no impact on performance. Instrumentation may see impact on performance even
+when the noop is used if it is computing / allocating attribute values and other
+data requried to record the telemetry. The noop is a useful default instance of
+`OpenTelemetry` when a user has not configured and installed a concrete
+implementation such as the [SDK](/docs/languages/java/sdk/).
 
 The following code snippet explores `OpenTelemetry#noop()` API usage:
 
@@ -1336,16 +1512,32 @@ public class NoopUsage {
 
 ### Semantic attributes
 
-The [semantic conventions](/docs/specs/semconv/) describe how to collect telemetry in a standardized way for common operations. This includes an [attribute registry](/docs/specs/semconv/attributes-registry/), which enumerates definitions for all attributes referenced in the conventions, organized by domain. The [semantic-conventions-java](https://github.com/open-telemetry/semantic-conventions-java) project generates constants from the semantic conventions, which can be used to help instrumentation conform:
+The [semantic conventions](/docs/specs/semconv/) describe how to collect
+telemetry in a standardized way for common operations. This includes an
+[attribute registry](/docs/specs/semconv/attributes-registry/), which enumerates
+definitions for all attributes referenced in the conventions, organized by
+domain. The
+[semantic-conventions-java](https://github.com/open-telemetry/semantic-conventions-java)
+project generates constants from the semantic conventions, which can be used to
+help instrumentation conform:
 
 | Description                                        | Artifact                                                                                     |
-|----------------------------------------------------|----------------------------------------------------------------------------------------------|
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | Generated code for stable semantic conventions     | `io.opentelemetry.semconv:opentelemetry-semconv:{{% param vers.semconv %}}-alpha`            |
 | Generated code for incubating semantic conventions | `io.opentelemetry.semconv:opentelemetry-semconv-incubating:{{% param vers.semconv %}}-alpha` |
 
-{{% alert %}} While both `opentelemetry-semconv` and `opentelemetry-semconv-incubating` include the `-alpha` suffix and are subject to breaking changes, the intent is to stabilize `opentelemetry-semconv` and leave the `-alpha` suffix on `opentelemetry-semconv-incubating` permanently. Libraries can use `opentelemetry-semconv-incubating` for testing, but should not include it as a dependency: since attributes may come and go from version to version, including as a dependency may expose end users to runtime errors when transitive version conflicts occur. {{% /alert %}}
+{{% alert %}} While both `opentelemetry-semconv` and
+`opentelemetry-semconv-incubating` include the `-alpha` suffix and are subject
+to breaking changes, the intent is to stabilize `opentelemetry-semconv` and
+leave the `-alpha` suffix on `opentelemetry-semconv-incubating` permanently.
+Libraries can use `opentelemetry-semconv-incubating` for testing, but should not
+include it as a dependency: since attributes may come and go from version to
+version, including as a dependency may expose end users to runtime errors when
+transitive version conflicts occur. {{% /alert %}}
 
-The attribute constants generated from semantic conventions are instances of `AttributeKey<T>`, and can be used anywhere the OpenTelemetry API accepts attributes.
+The attribute constants generated from semantic conventions are instances of
+`AttributeKey<T>`, and can be used anywhere the OpenTelemetry API accepts
+attributes.
 
 The following code snippet explores semantic convention attribute API usage:
 
@@ -1386,9 +1578,20 @@ public class SemanticAttributesUsage {
 
 ### Baggage
 
-[Baggage](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/baggage/Baggage.html) is a bundle of application defined key-value pairs associated with a distributed request or workflow execution. Baggage keys and values are strings, and values have optional string metadata. Telemetry can be enriched with data from baggage by configuring the [SDK](/docs/languages/java/sdk/) to add entries as attributes to spans, metrics, and log records. The baggage API is built on top of [context](#context), which allows span context to be implicitly passed around an application and across threads. Most of the context API usage guidance applies to baggage.
+[Baggage](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/baggage/Baggage.html)
+is a bundle of application defined key-value pairs associated with a distributed
+request or workflow execution. Baggage keys and values are strings, and values
+have optional string metadata. Telemetry can be enriched with data from baggage
+by configuring the [SDK](/docs/languages/java/sdk/) to add entries as attributes
+to spans, metrics, and log records. The baggage API is built on top of
+[context](#context), which allows span context to be implicitly passed around an
+application and across threads. Most of the context API usage guidance applies
+to baggage.
 
-Baggage is propagated across application boundaries with the [W3CBaggagePropagator](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/baggage/propagation/W3CBaggagePropagator.html) (see [TextMapPropagator](/docs/languages/java/sdk/#textmappropagator) for details).
+Baggage is propagated across application boundaries with the
+[W3CBaggagePropagator](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/baggage/propagation/W3CBaggagePropagator.html)
+(see [TextMapPropagator](/docs/languages/java/sdk/#textmappropagator) for
+details).
 
 The following code snippet explores `Baggage` API usage:
 
@@ -1474,6 +1677,15 @@ public class BaggageUsage {
 
 ## Incubating API
 
-The `io.opentelemetry:opentelemetry-api-incubator:{{% param vers.otel %}}-alpha` artifact contains experimental trace, metric, log, and context APIs which. Incubating APIs may have breaking API changes in minor releases. Often, these represent experimental specification features or API designs we want to vet with user feedback before committing to. We encourage users to try these APIs and open issues with any feedback (positive or negative). Libraries should not depend on the incubating APIs, since users may be exposed to runtime errors when transitive version conflicts occur.
+The `io.opentelemetry:opentelemetry-api-incubator:{{% param vers.otel %}}-alpha`
+artifact contains experimental trace, metric, log, and context APIs which.
+Incubating APIs may have breaking API changes in minor releases. Often, these
+represent experimental specification features or API designs we want to vet with
+user feedback before committing to. We encourage users to try these APIs and
+open issues with any feedback (positive or negative). Libraries should not
+depend on the incubating APIs, since users may be exposed to runtime errors when
+transitive version conflicts occur.
 
-See [incubator README](https://github.com/open-telemetry/opentelemetry-java/tree/main/api/incubator) for available APIs and sample usage.
+See
+[incubator README](https://github.com/open-telemetry/opentelemetry-java/tree/main/api/incubator)
+for available APIs and sample usage.
