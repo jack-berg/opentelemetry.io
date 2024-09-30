@@ -12,6 +12,7 @@ logBridgeWarning: >
   Log4j / SLF4J / Logback / etc.
 ---
 
+<!-- markdownlint-disable blanks-around-fences -->
 <?code-excerpt path-base="examples/java/api"?>
 
 The API is a set of classes and interfaces for recording telemetry across key
@@ -445,8 +446,6 @@ public class ProvidersAndScopes {
 }
 ```
 <!-- prettier-ignore-end -->
-
-[instrumentation scope]: /docs/specs/otel/glossary/#instrumentation-scope
 
 ### Attributes
 

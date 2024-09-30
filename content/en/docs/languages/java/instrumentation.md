@@ -15,7 +15,7 @@ Instrumentation records telemetry using the [API](../api/). The [SDK](../sdk/)
 is the built-in reference implementation of the API, and is
 [configured](../configuration/) to process and export the telemetry produced by
 instrumentation API calls. This page discusses the OpenTelemetry ecosystem in
-OpenTelemetry java, including resources for end users and cross-cutting
+OpenTelemetry Java, including resources for end users and cross-cutting
 instrumentation topics:
 
 - [Instrumentation categories](#instrumentation-categories): There are a variety
@@ -114,7 +114,7 @@ Shims maintained in the OpenTelemetry Java ecosystem:
 | Bridge [Opencensus](https://opencensus.io/) into OpenTelemetry                                                | [README](https://github.com/open-telemetry/opentelemetry-java/tree/main/opencensus-shim)                                                                                        | Traces, Metrics | `io.opentelemetry:opentelemetry-opencensus-shim:{{% param vers.otel %}}-alpha`                                                  |
 | Bridge [Micrometer](https://micrometer.io/) into OpenTelemetry                                                | [README](https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/micrometer/micrometer-1.5/library)                                      | Metrics         | `io.opentelemetry.instrumentation:opentelemetry-micrometer-1.5:{{% param vers.instrumentation %}}-alpha`                        |
 | Bridge [JMX](https://docs.oracle.com/javase/7/docs/technotes/guides/management/agent.html) into OpenTelemetry | [README](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/instrumentation/jmx-metrics/javaagent/README.md)                                        | Metrics         | `io.opentelemetry.instrumentation:opentelemetry-jmx-metrics:{{% param vers.instrumentation %}}-alpha`                           |
-| Bridge OpenTelemetry into [Prometheus java client](https://github.com/prometheus/client_java)                 | [README](https://github.com/open-telemetry/opentelemetry-java-contrib/tree/main/prometheus-client-bridge)                                                                       | Metrics         | `io.opentelemetry.contrib:opentelemetry-prometheus-client-bridge:{{% param vers.contrib %}}-alpha`                              |
+| Bridge OpenTelemetry into [Prometheus Java client](https://github.com/prometheus/client_java)                 | [README](https://github.com/open-telemetry/opentelemetry-java-contrib/tree/main/prometheus-client-bridge)                                                                       | Metrics         | `io.opentelemetry.contrib:opentelemetry-prometheus-client-bridge:{{% param vers.contrib %}}-alpha`                              |
 | Bridge OpenTelemetry into [Micrometer](https://micrometer.io/)                                                | [README](https://github.com/open-telemetry/opentelemetry-java-contrib/tree/main/micrometer-meter-provider)                                                                      | Metrics         | `io.opentelemetry.contrib:opentelemetry-micrometer-meter-provider:{{% param vers.contrib %}}-alpha`                             |
 | Bridge [Log4j](https://logging.apache.org/log4j/2.x/index.html) into OpenTelemetry                            | [README](https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/log4j/log4j-appender-2.17/library)                                      | Logs            | `io.opentelemetry.instrumentation:opentelemetry-log4j-appender-2.17:{{% param vers.instrumentation %}}-alpha`                   |
 | Bridge [Logback](https://logback.qos.ch/) into OpenTelemetry                                                  | [README](https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/logback/logback-appender-1.0/library)                                   | Logs            | `io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:{{% param vers.instrumentation %}}-alpha`                  |
@@ -188,7 +188,7 @@ In the direct to collector workflow, logs are emitted directly from an
 application to a collector using a network protocol (e.g. OTLP). This workflow
 is simple to set up as it doesn't require any additional log forwarding
 components, and allows an application to easily emit structured logs that
-conform to the [log data model][log data model]. However, the overhead required
+conform to the [log data model](/docs/specs/otel/logs/data-model/). However, the overhead required
 for applications to queue and export logs to a network location may not be
 suitable for all applications.
 
