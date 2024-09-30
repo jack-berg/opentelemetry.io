@@ -23,7 +23,7 @@ The API is designed to support multiple implementations. Two implementations are
 * [SDK](../sdk/) reference implementation. This is the right choice for most users.
 * [Noop](#noop-implementation) implementation. A minimalist, zero dependency implementation for instrumentations to use by default when the user doesn't install an instance.
 
-The API is designed to be taken as a direct dependency by libraries, frameworks, and application owners. It comes with [strong backwards compatibility guarantees](https://github.com/open-telemetry/opentelemetry-java/blob/main/VERSIONING.md#compatibility-requirements), zero transitive dependencies, and [supports Java 8+](https://github.com/open-telemetry/opentelemetry-java/blob/main/VERSIONING.md#language-version-compatibility).
+The API is designed to be taken as a direct dependency by libraries, frameworks, and application owners. It comes with [strong backwards compatibility guarantees](https://github.com/open-telemetry/opentelemetry-java/blob/main/VERSIONING.md#compatibility-requirements), zero transitive dependencies, and [supports Java 8+](https://github.com/open-telemetry/opentelemetry-java/blob/main/VERSIONING.md#language-version-compatibility). Libraries and frameworks should depend only on the API and only call methods from the API, and instruct applications / end users to add a dependency on the SDK and install a configured instance.
 
 ## API Components
 
@@ -160,92 +160,148 @@ The default `ContextStorage` implementation stores `Context` in thread local.
 
 ### ContextPropagators
 
-[ContextPropagators](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/propagation/ContextPropagators.html) is a container of registered propagators for propagating `Context` across application boundaries.
+[ContextPropagators](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/propagation/ContextPropagators.html) is a container of registered propagators for propagating `Context` across application boundaries. Context is injected into a carrier when leaving an application (i.e. an outbound HTTP request), and extracted from a carrier when entering an application (i.e. serving an HTTP request).
 
 See [SDK TextMapPropagators](../sdk/#textmappropagator) for propgator implementations.
 
-The following code snippet explores `ContextPropagators` API usage:
+The following code snippet explores `ContextPropagators` API for injection:
 
 <!-- prettier-ignore-start -->
-<?code-excerpt "src/main/java/otel/ContextPropagatorsUsage.java"?>
+<?code-excerpt "src/main/java/otel/InjectContextUsage.java"?>
 ```java
 package otel;
 
+import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+public class InjectContextUsage {
+  private static final TextMapSetter<HttpRequest.Builder> TEXT_MAP_SETTER = new HttpRequestSetter();
+
+  public static void injectContextUsage() throws Exception {
+    // Create a ContextPropagators instance which propagates w3c trace context and w3c baggage
+    ContextPropagators propagators =
+        ContextPropagators.create(
+            TextMapPropagator.composite(
+                W3CTraceContextPropagator.getInstance(), W3CBaggagePropagator.getInstance()));
+
+    // Create an HttpRequest builder
+    HttpClient httpClient = HttpClient.newBuilder().build();
+    HttpRequest.Builder requestBuilder =
+        HttpRequest.newBuilder().uri(new URI("http://127.0.0.1:8080/resource")).GET();
+
+    // Given a ContextPropagators instance, inject the current context into the HTTP request carrier
+    propagators.getTextMapPropagator().inject(Context.current(), requestBuilder, TEXT_MAP_SETTER);
+
+    // Send the request with the injected context
+    httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.discarding());
+  }
+
+  /** {@link TextMapSetter} with a {@link HttpRequest.Builder} carrier. */
+  private static class HttpRequestSetter implements TextMapSetter<HttpRequest.Builder> {
+    @Override
+    public void set(HttpRequest.Builder carrier, String key, String value) {
+      if (carrier == null) {
+        return;
+      }
+      carrier.setHeader(key, value);
+    }
+  }
+}
+```
+<!-- prettier-ignore-end -->
+
+The following code snippet explores `ContextPropagators` API for extraction:
+
+<!-- prettier-ignore-start -->
+<?code-excerpt "src/main/java/otel/ExtractContextUsage.java"?>
+```java
+package otel;
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
-public class ContextPropagatorsUsage {
+public class ExtractContextUsage {
+  private static final TextMapGetter<HttpExchange> TEXT_MAP_GETTER = new HttpRequestGetter();
 
-  private static final TextMapSetter<Map<String, String>> TEXT_MAP_SETTER = new MapTextMapSetter();
-  private static final TextMapGetter<Map<String, String>> TEXT_MAP_GETTER = new MapTextMapGetter();
-
-  public static void contextPropagatorsUsage() throws Exception {
-    // Create a ContextPropagators instance which propagates context via CustomTextMapPropagator
-    // implementation.
+  public static void extractContextUsage() throws Exception {
+    // Create a ContextPropagators instance which propagates w3c trace context and w3c baggage
     ContextPropagators propagators =
-        ContextPropagators.create(TextMapPropagator.composite(new CustomTextMapPropagator()));
+        ContextPropagators.create(
+            TextMapPropagator.composite(
+                W3CTraceContextPropagator.getInstance(), W3CBaggagePropagator.getInstance()));
 
-    // The carrier transmits the context across application bounds. Normally, its something like
-    // HTTP headers, but in this case we use Map<String, String> for simplicity.
-    Map<String, String> contextCarrier = new HashMap<>();
-
-    // Given a ContextPropagators instance, inject the current context into a carrier.
-    propagators.getTextMapPropagator().inject(Context.current(), contextCarrier, TEXT_MAP_SETTER);
-
-    // Given a ContextPropagators instance, extract the context from the carrier.
-    Context extractedContext =
-        propagators
-            .getTextMapPropagator()
-            .extract(Context.current(), contextCarrier, TEXT_MAP_GETTER);
+    // Create a server, which uses the propagators to extract context from requests
+    HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+    server.createContext("/path", new Handler(propagators));
+    server.setExecutor(null);
+    server.start();
   }
 
-  /** {@link TextMapSetter} with a {@link Map} carrier. */
-  private static class MapTextMapSetter implements TextMapSetter<Map<String, String>> {
+  private static class Handler implements HttpHandler {
+    private final ContextPropagators contextPropagators;
+
+    private Handler(ContextPropagators contextPropagators) {
+      this.contextPropagators = contextPropagators;
+    }
+
     @Override
-    public void set(Map<String, String> carrier, String key, String value) {
-      if (carrier != null) {
-        carrier.put(key, value);
+    public void handle(HttpExchange exchange) throws IOException {
+      // Extract the context from the request and make the context current
+      Context extractedContext =
+          contextPropagators
+              .getTextMapPropagator()
+              .extract(Context.current(), exchange, TEXT_MAP_GETTER);
+      try (Scope scope = extractedContext.makeCurrent()) {
+        // Do work with the extracted context
+      } finally {
+        String response = "success";
+        exchange.sendResponseHeaders(200, response.length());
+        OutputStream os = exchange.getResponseBody();
+        os.write(response.getBytes(StandardCharsets.UTF_8));
+        os.close();
       }
     }
   }
 
-  /** {@link TextMapGetter} with a {@link Map} carrier. */
-  private static class MapTextMapGetter implements TextMapGetter<Map<String, String>> {
+  /** {@link TextMapSetter} with a {@link HttpExchange} carrier. */
+  private static class HttpRequestGetter implements TextMapGetter<HttpExchange> {
     @Override
-    public Iterable<String> keys(Map<String, String> carrier) {
-      return carrier.keySet();
+    public Iterable<String> keys(HttpExchange carrier) {
+      return carrier.getRequestHeaders().keySet();
     }
 
     @Override
-    public String get(Map<String, String> carrier, String key) {
-      return carrier == null ? null : carrier.get(key);
-    }
-  }
-
-  private static class CustomTextMapPropagator implements TextMapPropagator {
-    @Override
-    public Collection<String> fields() {
-      // Return fields used for propagation. See W3CTraceContextPropagator for reference
-      // implementation.
-      return Collections.emptyList();
-    }
-
-    @Override
-    public <C> void inject(Context context, C carrier, TextMapSetter<C> setter) {
-      // Inject context. See W3CTraceContextPropagator for reference implementation.
-    }
-
-    @Override
-    public <C> Context extract(Context context, C carrier, TextMapGetter<C> getter) {
-      // Extract context. See W3CTraceContextPropagator for reference implementation.
-      return context;
+    public String get(HttpExchange carrier, String key) {
+      if (carrier == null) {
+        return null;
+      }
+      List<String> headers = carrier.getRequestHeaders().get(key);
+      if (headers == null || headers.isEmpty()) {
+        return null;
+      }
+      return headers.get(0);
     }
   }
 }
@@ -463,6 +519,40 @@ public class OpenTelemetryUsage {
     MeterProvider meterProvider = openTelemetry.getMeterProvider();
     LoggerProvider loggerProvider = openTelemetry.getLogsBridge();
     ContextPropagators propagators = openTelemetry.getPropagators();
+  }
+}
+```
+<!-- prettier-ignore-end -->
+
+### GlobalOpenTelemetry
+
+[GlobalOpenTelemetry](https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/GlobalOpenTelemetry.html) holds a global singleton [OpenTelemetry](#opentelemetry) instance. 
+
+Instrumentation should avoid using `GlobalOpenTelemetry`. Instead, accept `OpenTelemetry` as an initialization argument and default to the [Noop implementation](#noop-implementation) if not set. There is an exception to this rule: the `OpenTelemetry` instance installed by the [Java agent](/docs/zero-code/java/agent/) is available via `GlobalOpenTelemetry`. Users with additional manual instrumentation are encouraged to access it via `GlobalOpenTelemetry.get()`.
+
+`GlobalOpenTelemetry.get()` is guaranteed to always return the same result. If `GlobalOpenTelemetry.get()` is called before `GlobalOpenTelemetry.set(..)`, `GlobalOpenTelemetry` is set to the noop implementation and future calls to `GlobalOpenTelemetry.set(..)` throw an exception. Therefore, it's critical to call `GlobalOpenTelemetry.set(..)` as early in the application lifecycle as possible, and before `GlobalOpenTelemetry.get()` is called by any instrumentation. This guarantee surfaces initialization ordering issues: calling `GlobalOpenTelemetry.set()` too late (i.e. after instrumentation has called `GlobalOpenTelemetry.get()`) triggers an exception rather than silently failing.
+
+If [autoconfigure](/configuration/#zero-code-sdk-autoconfigure) is present, `GlobalOpenTelemetry` can be automatically initialized by setting `-Dotel.java.global-autoconfigure.enabled=true` (or via env var `export OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED=true`). When enabled, the first call to `GlobalOpenTelemetry.get()` triggers autoconfiguration and calls `GlobalOpenTelemetry.set(..)` with the resulting `OpenTelemetry` instance.
+
+The following code snippet explores `GlobalOpenTelemetry` API context propagation:
+
+<!-- prettier-ignore-start -->
+<?code-excerpt "src/main/java/otel/GlobalOpenTelemetryUsage.java"?>
+```java
+package otel;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+
+public class GlobalOpenTelemetryUsage {
+
+  public static void openTelemetryUsage(OpenTelemetry openTelemetry) {
+    // Set the GlobalOpenTelemetry instance as early in the application lifecycle as possible
+    // Set must only be called once. Calling multiple times raises an exception.
+    GlobalOpenTelemetry.set(openTelemetry);
+
+    // Get the GlobalOpenTelemetry instance.
+    openTelemetry = GlobalOpenTelemetry.get();
   }
 }
 ```
