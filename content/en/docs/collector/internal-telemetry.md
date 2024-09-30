@@ -23,18 +23,24 @@ By default, the Collector exposes its own telemetry in two ways:
 
 You can configure how internal metrics are generated and exposed by the
 Collector. By default, the Collector generates basic metrics about itself and
-exposes them for scraping at `http://127.0.0.1:8888/metrics`. You can expose the
-endpoint to one specific or all network interfaces when needed. For
-containerized environments, you might want to expose this port on a public
-interface.
+exposes them using the OpenTelemetry Go
+[Prometheus exporter](https://github.com/open-telemetry/opentelemetry-go/tree/main/exporters/prometheus)
+for scraping at `http://127.0.0.1:8888/metrics`. You can expose the endpoint to
+one specific or all network interfaces when needed. For containerized
+environments, you might want to expose this port on a public interface.
 
-Set the address in the config `service::telemetry::metrics`:
+Set the Prometheus config under `service::telemetry::metrics`:
 
 ```yaml
 service:
   telemetry:
     metrics:
-      address: 0.0.0.0:8888
+      readers:
+        pull:
+          exporter:
+            prometheus:
+              host: '0.0.0.0'
+              port: 8888
 ```
 
 You can adjust the verbosity of the Collector metrics output by setting the
@@ -59,30 +65,34 @@ service:
       level: detailed
 ```
 
-The Collector can also be configured to scrape its own metrics using a
-[Prometheus receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/prometheusreceiver)
-and send them through configured pipelines. For example:
+The Collector can also be configured to push its own metrics to an
+[OTLP receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver)
+and send them through configured pipelines. In the following example, the
+Collector is configured to push metrics every 10s using OTLP gRPC to
+`localhost:14317`:
 
 ```yaml
 receivers:
-  prometheus:
-    config:
-      scrape_configs:
-        - job_name: 'otelcol'
-          scrape_interval: 10s
-          static_configs:
-            - targets: ['0.0.0.0:8888']
-          metric_relabel_configs:
-            - source_labels: [__name__]
-              regex: '.*grpc_io.*'
-              action: drop
+  otlp/internal_metrics:
+    protocols:
+      grpc:
+        endpoint: localhost:14317
 exporters:
   debug:
 service:
   pipelines:
     metrics:
-      receivers: [prometheus]
+      receivers: [otlp/internal_metrics]
       exporters: [debug]
+  telemetry:
+    metrics:
+      readers:
+        - periodic:
+            interval: 10000
+            exporter:
+              otlp:
+                protocol: grpc/protobuf
+                endpoint: localhost:14317
 ```
 
 {{% alert title="Caution" color="warning" %}}
@@ -271,6 +281,64 @@ libraries. {{% /alert %}}
 | `rpc_server_requests_per_rpc`     | Measures the number of messages received per RPC. Should be 1 for all non-streaming RPCs. | Histogram |
 | `rpc_server_response_size`        | Measures the size of RPC response messages (uncompressed).                                | Histogram |
 | `rpc_server_responses_per_rpc`    | Measures the number of messages sent per RPC. Should be 1 for all non-streaming RPCs.     | Histogram |
+
+### Telemetry maturity levels
+
+#### Traces
+
+Tracing instrumentation is still under active development, and changes might be
+made to span names, attached attributes, instrumented endpoints, or other
+aspects of the telemetry. Until this feature graduates to stable, there are no
+guarantees of backwards compatibility for tracing instrumentation.
+
+#### Metrics
+
+The Collector's metrics follow a four-stage lifecycle:
+
+> Alpha metric → Stable metric → Deprecated metric → Deleted metric
+
+##### Alpha
+
+Alpha metrics have no stability guarantees. These metrics can be modified or
+deleted at any time.
+
+##### Stable
+
+Stable metrics are guaranteed to not change. This means:
+
+- A stable metric without a deprecated signature will not be deleted or renamed.
+- A stable metric's type and attributes will not be modified.
+
+##### Deprecated
+
+Deprecated metrics are slated for deletion but are still available for use. The
+description of these metrics include an annotation about the version in which
+they became deprecated. For example:
+
+Before deprecation:
+
+```sh
+# HELP otelcol_exporter_queue_size this counts things
+# TYPE otelcol_exporter_queue_size counter
+otelcol_exporter_queue_size 0
+```
+
+After deprecation:
+
+```sh
+# HELP otelcol_exporter_queue_size (Deprecated since 1.15.0) this counts things
+# TYPE otelcol_exporter_queue_size counter
+otelcol_exporter_queue_size 0
+```
+
+##### Deleted
+
+Deleted metrics are no longer published and cannot be used.
+
+#### Logs
+
+Individual log entries and their formatting might change from one release to the
+next. There are no stability guarantees at this time.
 
 ### Events observable with internal logs
 
