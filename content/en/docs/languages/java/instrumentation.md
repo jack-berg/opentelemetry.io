@@ -7,7 +7,7 @@ aliases:
   - manual_instrumentation
 weight: 10
 description: Instrumentation ecosystem in OpenTelemetry Java
-cSpell:ignore: Logback
+cSpell:ignore: Logback logback
 ---
 
 <!-- markdownlint-disable no-duplicate-heading -->
