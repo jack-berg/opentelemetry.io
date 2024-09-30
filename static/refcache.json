@@ -12731,6 +12731,10 @@
     "StatusCode": 200,
     "LastSeen": "2024-08-05T15:59:36.584528-05:00"
   },
+  "https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/DoubleCounter.html": {
+    "StatusCode": 200,
+    "LastSeen": "2024-09-30T11:26:12.546964-05:00"
+  },
   "https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/DoubleGauge.html": {
     "StatusCode": 200,
     "LastSeen": "2024-09-30T10:42:56.762156-05:00"
@@ -12742,6 +12746,10 @@
   "https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/DoubleUpDownCounter.html": {
     "StatusCode": 200,
     "LastSeen": "2024-09-30T10:42:39.724087-05:00"
+  },
+  "https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/LongCounter.html": {
+    "StatusCode": 200,
+    "LastSeen": "2024-09-30T11:26:11.401131-05:00"
   },
   "https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/LongGauge.html": {
     "StatusCode": 200,
@@ -12810,6 +12818,10 @@
   "https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/Context.html": {
     "StatusCode": 200,
     "LastSeen": "2024-09-30T10:42:14.126006-05:00"
+  },
+  "https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/ContextStorage.html": {
+    "StatusCode": 200,
+    "LastSeen": "2024-09-30T11:26:04.981525-05:00"
   },
   "https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-context/latest/io/opentelemetry/context/propagation/ContextPropagators.html": {
     "StatusCode": 200,
@@ -12906,14 +12918,6 @@
   "https://www.javadoc.io/doc/io.opentelemetry/opentelemetry-sdk/latest/io/opentelemetry/sdk/OpenTelemetrySdk.html": {
     "StatusCode": 200,
     "LastSeen": "2024-08-05T15:19:47.672179-05:00"
-  },
-  "https://www.javadoc.io/static/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/DoubleCounter.html": {
-    "StatusCode": 403,
-    "LastSeen": "2024-09-30T10:43:08.095402-05:00"
-  },
-  "https://www.javadoc.io/static/io.opentelemetry/opentelemetry-api/latest/io/opentelemetry/api/metrics/LongCounter.html": {
-    "StatusCode": 403,
-    "LastSeen": "2024-09-30T10:43:07.677122-05:00"
   },
   "https://www.javadoc.io/static/io.opentelemetry/opentelemetry-context/1.41.0/io/opentelemetry/context/ContextStorage.html": {
     "StatusCode": 200,

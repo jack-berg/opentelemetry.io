@@ -7,6 +7,7 @@ aliases:
   - manual_instrumentation
 weight: 10
 description: Instrumentation ecosystem in OpenTelemetry Java
+cSpell:ignore: Logback
 ---
 
 <!-- markdownlint-disable no-duplicate-heading -->
@@ -35,7 +36,7 @@ There are several categories of instrumentation:
 
 - [Zero-code: Java agent](#zero-code-java-agent) is a form of zero-code
   instrumentation **[1]** that dynamically manipulates application bytecode.
-- [Zerc-code: Spring Boot starter](#zero-code-spring-boot-starter) is a form of
+- [Zero-code: Spring Boot starter](#zero-code-spring-boot-starter) is a form of
   zero-code instrumentation **[1]** that leverages spring autoconfigure to
   install [library instrumentation](#library-instrumentation).
 - [Library instrumentation](#library-instrumentation) wraps or uses extension
@@ -94,7 +95,7 @@ as a temporary means of filling the gap.
 
 For a list of libraries with native instrumentation, look for entries with the
 "native" badge in the
-[registry](https://opentelemetry.io/ecosystem/registry/?language=java).
+[registry](/ecosystem/registry/?language=java).
 
 ### Manual instrumentation
 

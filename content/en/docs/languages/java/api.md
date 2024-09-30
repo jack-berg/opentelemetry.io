@@ -10,6 +10,7 @@ logBridgeWarning: >
   to bridge logs recorded through other log APIs / frameworks into
   OpenTelemetry. They are not intended for end user use as a replacement for
   Log4j / SLF4J / Logback / etc.
+cSpell:ignore: Logback, kotlint, Dotel, updowncounter
 ---
 
 <!-- markdownlint-disable blanks-around-fences -->
@@ -211,7 +212,7 @@ application boundaries. Context is injected into a carrier when leaving an
 application (i.e. an outbound HTTP request), and extracted from a carrier when
 entering an application (i.e. serving an HTTP request).
 
-See [SDK TextMapPropagators](../sdk/#textmappropagator) for propgator
+See [SDK TextMapPropagators](../sdk/#textmappropagator) for propagator
 implementations.
 
 The following code snippet explores `ContextPropagators` API for injection:
@@ -860,15 +861,15 @@ scopes. There are a variety of instruments, each with different semantics and
 default behavior in the SDK. Its important to choose the right instrument for
 each particular use case:
 
-| Instrument                                  | Sync or Async | Description                                                                        | Example                                                 | Default SDK Aggregation                                                                       |
-| ------------------------------------------- | ------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [Counter](#counter)                         | sync          | Record monotonic (positive) values.                                                | Record user logins                                      | [sum (monotonic=true)](/docs/specs/otel/metrics/sdk/#sum-aggregation)                         |
-| [Async Counter](#async-counter)             | async         | Observe monotonic sums.                                                            | Observe number of classes loaded in the JVM             | [sum (monotonic=true)](/docs/specs/otel/metrics/sdk/#sum-aggregation)                         |
-| [UpDownCounter](#updowncounter)             | sync          | Record non-monotonic (positive and negative) values.                               | Record when items are added to and removed from a queue | [sum (monotonic=false)](/docs/specs/otel/metrics/sdk/#sum-aggregation)                        |
-| [Async UpDownCounter](#async-updowncounter) | async         | Observe non-monotonic (positive and negative) sums.                                | Observe JVM memory pool usage                           | [sum (monotonic=false)](/docs/specs/otel/metrics/sdk/#sum-aggregation)                        |
-| [Histogram](#histogram)                     | sync          | Record monotonic (positive) values where the distribution is important.            | Record duration of HTTP requests processed by server    | [ExplicitBucketHistgram](/docs/specs/otel/metrics/sdk/#explicit-bucket-histogram-aggregation) |
-| [Gauge](#gauge)                             | sync          | Record the latest value where spatial re-aggregation does not make sense **[1]**.  | Record temperature                                      | [LastValue](/docs/specs/otel/metrics/sdk/#last-value-aggregation)                             |
-| [Async Gauge](#async-gauge)                 | async         | Observe the latest value where spatial re-aggregation does not make sense **[1]**. | Observe CPU utilization                                 | [LastValue](/docs/specs/otel/metrics/sdk/#last-value-aggregation)                             |
+| Instrument                                  | Sync or Async | Description                                                                        | Example                                                 | Default SDK Aggregation                                                                        |
+| ------------------------------------------- | ------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| [Counter](#counter)                         | sync          | Record monotonic (positive) values.                                                | Record user logins                                      | [sum (monotonic=true)](/docs/specs/otel/metrics/sdk/#sum-aggregation)                          |
+| [Async Counter](#async-counter)             | async         | Observe monotonic sums.                                                            | Observe number of classes loaded in the JVM             | [sum (monotonic=true)](/docs/specs/otel/metrics/sdk/#sum-aggregation)                          |
+| [UpDownCounter](#updowncounter)             | sync          | Record non-monotonic (positive and negative) values.                               | Record when items are added to and removed from a queue | [sum (monotonic=false)](/docs/specs/otel/metrics/sdk/#sum-aggregation)                         |
+| [Async UpDownCounter](#async-updowncounter) | async         | Observe non-monotonic (positive and negative) sums.                                | Observe JVM memory pool usage                           | [sum (monotonic=false)](/docs/specs/otel/metrics/sdk/#sum-aggregation)                         |
+| [Histogram](#histogram)                     | sync          | Record monotonic (positive) values where the distribution is important.            | Record duration of HTTP requests processed by server    | [ExplicitBucketHistogram](/docs/specs/otel/metrics/sdk/#explicit-bucket-histogram-aggregation) |
+| [Gauge](#gauge)                             | sync          | Record the latest value where spatial re-aggregation does not make sense **[1]**.  | Record temperature                                      | [LastValue](/docs/specs/otel/metrics/sdk/#last-value-aggregation)                              |
+| [Async Gauge](#async-gauge)                 | async         | Observe the latest value where spatial re-aggregation does not make sense **[1]**. | Observe CPU utilization                                 | [LastValue](/docs/specs/otel/metrics/sdk/#last-value-aggregation)                              |
 
 **[1]**: Spatial re-aggregation is the process of merging attribute streams by
 dropping attributes which are not needed. For example, given series with
@@ -1424,7 +1425,7 @@ The `OpenTelemetry#noop()` method provides access to a noop implementation of
 the name suggests, the noop implementation does nothing and is designed to have
 no impact on performance. Instrumentation may see impact on performance even
 when the noop is used if it is computing / allocating attribute values and other
-data requried to record the telemetry. The noop is a useful default instance of
+data required to record the telemetry. The noop is a useful default instance of
 `OpenTelemetry` when a user has not configured and installed a concrete
 implementation such as the [SDK](/docs/languages/java/sdk/).
 
